@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Website</title>
+    <style>
+        body {
+            background: linear-gradient(to right, rgb(113, 65, 168), rgb(44, 114, 251));
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        .container {
+            width: 98%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgb(77, 146, 207);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .title {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .input-container {
+            margin-top: 20px;
+        }
+        .input-container input[type='text'] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .input-container input[type="text"]:focus {
+            border: 2px solid #555;
+        }
+        .plan-list {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgb(77, 146, 207); 
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            color: white;
+        }
+        .plan-list p {
+            margin: 5px 0;
+        }
+        .delete-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #e03131;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">群主更香</div>
+        <p>欢迎来到我自学网站所做的第一个网站</p>
+        <div class="input-container">
+            <label for="plan-input">添加计划:</label>
+            <input type="text" id="plan-input" name="plan-input" placeholder="请输入计划内容">
+            <button onclick="addPlan()">添加</button>
+        </div>
+        <div class="plan-list" id="plan-list">
+            <p>你所添加的计划：</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const planList = document.getElementById('plan-list');
+            const storedPlans = JSON.parse(localStorage.getItem('plans')) || [];
+            storedPlans.forEach((plan, index) => {
+                const planItem = document.createElement('p');
+                planItem.textContent = plan;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '删除';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = function() {
+                    deletePlan(index);
+                };
+
+                planItem.appendChild(deleteBtn);
+                planList.appendChild(planItem);
+            });
+        };
+
+        function addPlan() {
+            const input = document.getElementById('plan-input');
+            const planList = document.getElementById('plan-list');
+            const planText = input.value.trim();
+            if (planText !== '') {
+                const planItem = document.createElement('p');
+                planItem.textContent = planText;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '删除';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = function() {
+                    deletePlan(planList.children.length - 1);
+                };
+
+                planItem.appendChild(deleteBtn);
+                planList.appendChild(planItem);
+
+                let storedPlans = JSON.parse(localStorage.getItem('plans')) || [];
+                storedPlans.push(planText);
+                localStorage.setItem('plans', JSON.stringify(storedPlans));
+
+                input.value = '';
+            }
+        }
+
+        function deletePlan(index) {
+            const planList = document.getElementById('plan-list');
+            const planItem = planList.children[index];
+            if (planItem) {
+                planList.removeChild(planItem);
+
+                let storedPlans = JSON.parse(localStorage.getItem('plans')) || [];
+                storedPlans.splice(index, 1);
+                localStorage.setItem('plans', JSON.stringify(storedPlans));
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击按钮显示随机文字</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #text-container {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>随机文字</h1>
+    <button onclick="showRandomText()">试试？</button>
+    <div id="text-container"></div>
+
+    <script>
+        
+        const texts = [
+            "群主爱女装",
+            "群主好可爱",
+            "快去玩GB",
+            "群主宝宝可爱嘞",
+            "橡皮糖宝宝也可爱"
+            
+            
+          
+        ];
+
+        function showRandomText() {
+            const textContainer = document.getElementById('text-container');
+            const randomIndex = Math.floor(Math.random() * texts.length);
+            textContainer.textContent = texts[randomIndex];
+        }
+    </script>
+</body>
