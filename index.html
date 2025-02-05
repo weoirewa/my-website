@@ -9,27 +9,54 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin-top: 50px;
+            transition: background-color 0.5s, color 0.5s;
+        }
+        body.light-theme {
+            background-color: #fff;
+            color: #333;
+        }
+        body.dark-theme {
+            background-color: #333;
+            color: #fff;
         }
         #text-container {
             margin-top: 20px;
             font-size: 1.2em;
-            color: #333;
+            color: inherit;
+            transition: opacity 0.5s ease;
+            opacity: 0;
         }
         button {
             padding: 10px 20px;
             font-size: 1em;
             cursor: pointer;
+            background-color: #3d85a1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #9ad6ed;
+        }
+        #counter {
+            margin-top: 10px;
+            font-size: 1em;
+            color: inherit;
         }
     </style>
 </head>
-<body>
+<body class="light-theme">
     <h1>随机文字</h1>
     <button onclick="showRandomText()">试试？</button>
+    <button onclick="resetText()">重置</button>
+    <button onclick="shareText()" class="btn btn-info">分享</button>
+    <button onclick="toggleTheme()" class="btn btn-dark">切换主题</button>
     <div id="text-container"></div>
+    <div id="counter">点击次数：0</div>
 
     <script>
-        
-        const texts = [
+        let texts = [
             "群主爱女装",
             "群主好可爱",
             "快去玩GB",
@@ -43,15 +70,76 @@
              "你好",
             "你知道吗,橡皮糖已经不知道被多少人用过了",
             "群主真的好可爱,好想入awa"
-            
-            
-          
         ];
+        let chickCount = 0;
+        let isAnimating = false;
 
         function showRandomText() {
+            if (isAnimating) return;
+            isAnimating = true;
+
             const textContainer = document.getElementById('text-container');
+            if (texts.length === 0) {
+                textContainer.textContent = "没有更多文字了！";
+                textContainer.style.opacity = 1;
+                isAnimating = false;
+                return;
+            }
+
             const randomIndex = Math.floor(Math.random() * texts.length);
             textContainer.textContent = texts[randomIndex];
+            textContainer.style.opacity = 0;
+            requestAnimationFrame(() => {
+                textContainer.style.opacity = 1;
+            });
+
+            chickCount++;
+            document.getElementById('counter').textContent = `点击次数：${chickCount}`;
+
+            setTimeout(() => {
+                isAnimating = false;
+            }, 500);
+        }
+
+        function resetText() {
+            const textContainer = document.getElementById('text-container');
+            textContainer.textContent = '';
+            textContainer.style.opacity = 0;
+            chickCount = 0;
+            document.getElementById('counter').textContent = '点击次数：0';
+            isAnimating = false;
+        }
+
+        function shareText() {
+            const textContainer = document.getElementById('text-container');
+            const currentText = textContainer.textContent;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: '随机文字',
+                    text: currentText,
+                    url: window.location.href
+                }).then(() => {
+                    console.log('分享成功');
+                }).catch(error => {
+                    console.error('分享失败', error);
+                });
+            } else {
+                const shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(currentText)}&url=${encodeURIComponent(window.location.href)}`;
+                window.open(shareLink, '_blank');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
+            } else {
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+            }
         }
     </script>
 </body>
+</html>
