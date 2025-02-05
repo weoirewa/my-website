@@ -1,151 +1,284 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>点击按钮显示随机文字</title>
+    <title>2048</title>
     <style>
         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f9f6f2;
             font-family: Arial, sans-serif;
+        }
+
+        #game-container {
+            width: 400px;
+            height: 400px;
+            border: 10px solid #bbada0;
+            border-radius: 10px;
+            background-color: #f9f6f2;
+            position: relative;
+            margin: 20px;
+            touch-action: none; /* 禁用默认的触摸行为 */
+        }
+
+        .tile {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            color: #776e65;
+            font-size: 30px;
+            font-weight: bold;
             text-align: center;
-            margin-top: 50px;
-            transition: background-color 0.5s, color 0.5s;
-        }
-        body.light-theme {
-            background-color: #fff;
-            color: #333;
-        }
-        body.dark-theme {
-            background-color: #333;
-            color: #fff;
-        }
-        #text-container {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: inherit;
-            transition: opacity 0.5s ease;
-            opacity: 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            background-color: #3d85a1;
-            color: white;
-            border: none;
+            line-height: 90px;
             border-radius: 5px;
-            margin: 5px;
+            transition: transform 0.2s ease; /* 添加平滑过渡效果 */
         }
-        button:hover {
-            background-color: #9ad6ed;
-        }
-        #counter {
-            margin-top: 10px;
-            font-size: 1em;
-            color: inherit;
+
+        /* 不同数字的颜色 */
+        .tile-2 { background-color: #eee4da; }
+        .tile-4 { background-color: #ede0c8; }
+        .tile-8 { background-color: #f2b179; }
+        .tile-16 { background-color: #f59563; }
+        .tile-32 { background-color: #f67c5f; }
+        .tile-64 { background-color: #f65e3b; }
+        .tile-128 { background-color: #edcf72; }
+        .tile-256 { background-color: #edcc61; }
+        .tile-512 { background-color: #edc850; }
+        .tile-1024 { background-color: #edc53f; }
+        .tile-2048 { background-color: #edc22e; }
+
+        #score-container {
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
 </head>
-<body class="light-theme">
-    <h1>随机文字</h1>
-    <button onclick="showRandomText()">试试？</button>
-    <button onclick="resetText()">重置</button>
-    <button onclick="shareText()" class="btn btn-info">分享</button>
-    <button onclick="toggleTheme()" class="btn btn-dark">切换主题</button>
-    <div id="text-container"></div>
-    <div id="counter">点击次数：0</div>
-
+<body>
+    <div id="game-container">
+        <div id="game-board"></div>
+    </div>
+    <div id="score-container">得分: <span id="score">0</span></div> <!-- 修改为“得分” -->
+    <button id="reset-button" onclick="initializeGame()">重置</button> <!-- 修改为“重置” -->
     <script>
-        let texts = [
-            "群主爱女装",
-            "群主好可爱",
-            "快去玩GB",
-            "群主宝宝可爱嘞",
-            "橡皮糖宝宝也可爱",
-            "群主爱吃大78",
-            "马达拉不处",
-            "哈基资爱艾草",
-            "SL挺好玩的建议你去玩SL",
-            "别点了,你有那么无聊吗",
-            "你好",
-            "你知道吗,橡皮糖已经不知道被多少人用过了",
-            "群主真的好可爱,好想入awa",
-            "快来玩战争雷霆吧！好处多多",
-            "橡皮糖爱导管",
-            "本网页作者qq:2658597662",
-            "马拉达是橡皮糖的飞机杯",
-            "橡皮糖是马拉达的性欲",
-            "一切皆有可能---LI-NING",
-            "现在战地1 国区9.9元，快去当拼好兵吧"
-        ];
-        let chickCount = 0;
-        let isAnimating = false;
+        const boardSize = 4;
+        const board = document.getElementById("game-board");
+        let score = 0;
+        const scoreDisplay = document.getElementById("score");
 
-        function showRandomText() {
-            if (isAnimating) return;
-            isAnimating = true;
+        let grid = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
 
-            const textContainer = document.getElementById('text-container');
-            if (texts.length === 0) {
-                textContainer.textContent = "没有更多文字了！";
-                textContainer.style.opacity = 1;
-                isAnimating = false;
-                return;
+        function createTile(value, x, y) {
+            const tile = document.createElement("div");
+            tile.classList.add("tile", `tile-${value}`);
+            tile.style.left = `${x * 100 + 5}px`;
+            tile.style.top = `${y * 100 + 5}px`;
+            tile.textContent = value;
+            board.appendChild(tile);
+            return tile;
+        }
+
+        function addRandomTile() {
+            const emptyCells = [];
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    if (grid[i][j] === null) {
+                        emptyCells.push({ x: i, y: j });
+                    }
+                }
             }
-
-            const randomIndex = Math.floor(Math.random() * texts.length);
-            textContainer.textContent = texts[randomIndex];
-            textContainer.style.opacity = 0;
-            requestAnimationFrame(() => {
-                textContainer.style.opacity = 1;
-            });
-
-            chickCount++;
-            document.getElementById('counter').textContent = `点击次数：${chickCount}`;
-
-            setTimeout(() => {
-                isAnimating = false;
-            }, 500);
+            if (emptyCells.length === 0) return null;
+            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const value = Math.random() > 0.9 ? 4 : 2;
+            grid[randomCell.x][randomCell.y] = value;
+            createTile(value, randomCell.x, randomCell.y);
         }
 
-        function resetText() {
-            const textContainer = document.getElementById('text-container');
-            textContainer.textContent = '';
-            textContainer.style.opacity = 0;
-            chickCount = 0;
-            document.getElementById('counter').textContent = '点击次数：0';
-            isAnimating = false;
+        function initializeGame() {
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    grid[i][j] = null;
+                }
+            }
+            board.innerHTML = "";
+            score = 0;
+            scoreDisplay.textContent = score;
+            addRandomTile();
+            addRandomTile();
         }
 
-        function shareText() {
-            const textContainer = document.getElementById('text-container');
-            const currentText = textContainer.textContent;
+        initializeGame();
 
-            if (navigator.share) {
-                navigator.share({
-                    title: '随机文字',
-                    text: currentText,
-                    url: window.location.href
-                }).then(() => {
-                    console.log('分享成功');
-                }).catch(error => {
-                    console.error('分享失败', error);
-                });
+        let startX, startY, endX, endY;
+
+        function handleTouchStart(event) {
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        }
+
+        function handleTouchEnd(event) {
+            const touch = event.changedTouches[0];
+            endX = touch.clientX;
+            endY = touch.clientY;
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 0) {
+                    moveRight();
+                } else {
+                    moveLeft();
+                }
             } else {
-                const shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(currentText)}&url=${encodeURIComponent(window.location.href)}`;
-                window.open(shareLink, '_blank');
+                if (deltaY > 0) {
+                    moveDown();
+                } else {
+                    moveUp();
+                }
+            }
+            addRandomTile();
+            checkGameOver();
+        }
+
+        document.getElementById("game-container").addEventListener("touchstart", handleTouchStart);
+        document.getElementById("game-container").addEventListener("touchend", handleTouchEnd);
+
+        function move(direction) {
+            let moved = false;
+            for (let i = 0; i < boardSize; i++) {
+                let lastMerge = -1;
+                for (let j = 0; j < boardSize; j++) {
+                    let row = i, col = j;
+                    if (direction === "up") {
+                        row = j;
+                        col = i;
+                    } else if (direction === "down") {
+                        row = j;
+                        col = boardSize - 1 - i;
+                    } else if (direction === "left") {
+                        row = i;
+                        col = j;
+                    } else if (direction === "right") {
+                        row = i;
+                        col = boardSize - 1 - j;
+                    }
+                    if (grid[row][col] !== null) {
+                        let newRow = row, newCol = col;
+                        if (direction === "up") {
+                            while (newRow > 0 && grid[newRow - 1][col] === null) {
+                                newRow--;
+                            }
+                            if (newRow > 0 && grid[newRow - 1][col] === grid[row][col] && lastMerge !== newRow - 1) {
+                                score += grid[row][col] * 2;
+                                scoreDisplay.textContent = score;
+                                grid[newRow - 1][col] *= 2;
+                                grid[row][col] = null;
+                                lastMerge = newRow - 1;
+                                moved = true;
+                            } else if (newRow !== row) {
+                                grid[newRow][col] = grid[row][col];
+                                grid[row][col] = null;
+                                moved = true;
+                            }
+                        } else if (direction === "down") {
+                            while (newRow < boardSize - 1 && grid[newRow + 1][col] === null) {
+                                newRow++;
+                            }
+                            if (newRow < boardSize - 1 && grid[newRow + 1][col] === grid[row][col] && lastMerge !== newRow + 1) {
+                                score += grid[row][col] * 2;
+                                scoreDisplay.textContent = score;
+                                grid[newRow + 1][col] *= 2;
+                                grid[row][col] = null;
+                                lastMerge = newRow + 1;
+                                moved = true;
+                            } else if (newRow !== row) {
+                                grid[newRow][col] = grid[row][col];
+                                grid[row][col] = null;
+                                moved = true;
+                            }
+                        } else if (direction === "left") {
+                            while (newCol > 0 && grid[row][newCol - 1] === null) {
+                                newCol--;
+                            }
+                            if (newCol > 0 && grid[row][newCol - 1] === grid[row][col] && lastMerge !== newCol - 1) {
+                                score += grid[row][col] * 2;
+                                scoreDisplay.textContent = score;
+                                grid[row][newCol - 1] *= 2;
+                                grid[row][col] = null;
+                                lastMerge = newCol - 1;
+                                moved = true;
+                            } else if (newCol !== col) {
+                                grid[row][newCol] = grid[row][col];
+                                grid[row][col] = null;
+                                moved = true;
+                            }
+                        } else if (direction === "right") {
+                            while (newCol < boardSize - 1 && grid[row][newCol + 1] === null) {
+                                newCol++;
+                            }
+                            if (newCol < boardSize - 1 && grid[row][newCol + 1] === grid[row][col] && lastMerge !== newCol + 1) {
+                                score += grid[row][col] * 2;
+                                scoreDisplay.textContent = score;
+                                grid[row][newCol + 1] *= 2;
+                                grid[row][col] = null;
+                                lastMerge = newCol + 1;
+                                moved = true;
+                            } else if (newCol !== col) {
+                                grid[row][newCol] = grid[row][col];
+                                grid[row][col] = null;
+                                moved = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (moved) {
+                updateBoard();
             }
         }
 
-        function toggleTheme() {
-            const body = document.body;
-            if (body.classList.contains('dark-theme')) {
-                body.classList.remove('dark-theme');
-                body.classList.add('light-theme');
-            } else {
-                body.classList.remove('light-theme');
-                body.classList.add('dark-theme');
+        function moveUp() {
+            move("up");
+        }
+
+        function moveDown() {
+            move("down");
+        }
+
+        function moveLeft() {
+            move("left");
+        }
+
+        function moveRight() {
+            move("right");
+        }
+
+        function updateBoard() {
+            board.innerHTML = "";
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    if (grid[i][j] !== null) {
+                        createTile(grid[i][j], i, j);
+                    }
+                }
             }
+        }
+
+        function checkGameOver() {
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    if (grid[i][j] === null) return false;
+                    if (i > 0 && grid[i][j] === grid[i - 1][j]) return false;
+                    if (j > 0 && grid[i][j] === grid[i][j - 1]) return false;
+                }
+            }
+            alert("游戏结束！");
+            return true;
         }
     </script>
 </body>
